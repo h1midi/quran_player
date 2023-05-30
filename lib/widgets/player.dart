@@ -42,7 +42,14 @@ class _PlayerState extends State<Player> {
                   ),
                 ),
             ]))
+            .whenComplete(() => setState(() {
+                  callback;
+                }))
             .onError((error, stackTrace) => null);
+        //call callback function whebever the next or previous button is pressed
+        _audioPlayer.sequenceStateStream.listen((event) {
+          callback(event!.currentIndex);
+        });
       });
     }
   }
