@@ -109,6 +109,49 @@ class _PlayerState extends State<Player> {
                           : '',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
+                    // TODO: add progress bar
+                    StreamBuilder<Object>(
+                        initialData: const Duration(seconds: 0),
+                        stream: _audioPlayer.positionStream,
+                        builder: (context, snapshot) {
+                          if (snapshot.hasError) {
+                            return const Text('Error');
+                          }
+                          if (!snapshot.hasData) {
+                            return const Text('Loading...');
+                          }
+                          Duration bufferedPosition = snapshot.data as Duration;
+                          return Padding(
+                            padding: const EdgeInsets.fromLTRB(18.0, 10, 18, 0),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                        '${bufferedPosition.inHours}:${bufferedPosition.inMinutes % 60}:${(bufferedPosition.inSeconds % 60).toString().padLeft(2, '0')}'),
+                                    _audioPlayer.duration != null
+                                        ? Text(
+                                            '${_audioPlayer.duration!.inHours}:${_audioPlayer.duration!.inMinutes % 60}:${(_audioPlayer.duration!.inSeconds % 60).toString().padLeft(2, '0')}')
+                                        : const SizedBox(),
+                                  ],
+                                ),
+                                LinearProgressIndicator(
+                                  value: bufferedPosition.inMilliseconds
+                                          .toDouble() /
+                                      _audioPlayer.duration!.inMilliseconds
+                                          .toDouble(),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Theme.of(context).colorScheme.primary),
+                                  backgroundColor: Colors.grey,
+                                  borderRadius: const BorderRadius.all(
+                                      Radius.circular(18)),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
                     PlayerButtons(_audioPlayer),
                     Expanded(child: Playlist(_audioPlayer, callback)),
                   ],
