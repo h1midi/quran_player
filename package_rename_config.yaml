@@ -1,0 +1,15 @@
+package_rename_config:
+  android:
+    app_name: Ali Jaber
+    package_name: com.codeNrelease.ali_jaber
+    lang: kotlin
+
+package_rename_config-offline:
+  android:
+    app_name: Ali Jaber Offline
+    package_name: com.codeNrelease.ali_jaber_offline
+    lang: kotlin
+
+
+    # dart run package_rename -f offline
+    # dart run package_rename

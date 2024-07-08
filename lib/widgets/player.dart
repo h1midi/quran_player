@@ -30,6 +30,7 @@ class _PlayerState extends State<Player> {
         surahList = surahData
             .map<QuranSurah>((json) => QuranSurah.fromJson(json))
             .toList();
+        print(surahList);
         _audioPlayer
             .setAudioSource(ConcatenatingAudioSource(children: [
               for (var i = 1; i <= 114; i++)
@@ -38,7 +39,7 @@ class _PlayerState extends State<Player> {
                       "https://server11.mp3quran.net/a_jbr/${i.toString().padLeft(3, '0')}.mp3"),
                   tag: AudioMetadata(
                     title: "سورة ${surahList[i - 1].name}",
-                    artwork: "assets/ali_jaber.jpg",
+                    artwork: "assets/images/ali_jaber.jpg",
                   ),
                 ),
             ]))
@@ -46,7 +47,6 @@ class _PlayerState extends State<Player> {
                   callback;
                 }))
             .onError((error, stackTrace) => null);
-        //call callback function whebever the next or previous button is pressed
         _audioPlayer.sequenceStateStream.listen((event) {
           callback(event!.currentIndex);
         });
@@ -57,7 +57,26 @@ class _PlayerState extends State<Player> {
   @override
   void initState() {
     super.initState();
+    /* -------------use this in the online version------------- */
     fetchSurahList();
+    /* -------------use this in the offline version------------- */
+    // _audioPlayer
+    //         .setAudioSource(ConcatenatingAudioSource(children: [
+    //           for (var i = 1; i <= 114; i++)
+    //             AudioSource.asset(
+    //                 "assets/mp3/${i.toString().padLeft(3, '0')}.mp3",
+    //                 tag: AudioMetadata(
+    //                   title: "سورة ${surahList[i - 1].name}",
+    //                   artwork: "assets/ali_jaber.jpg",
+    //                 ))
+    //         ]))
+    //         .whenComplete(() => setState(() {
+    //               callback;
+    //             }))
+    //         .onError((error, stackTrace) => null);
+    //     _audioPlayer.sequenceStateStream.listen((event) {
+    //       callback(event!.currentIndex);
+    //     });
   }
 
   @override
@@ -109,49 +128,65 @@ class _PlayerState extends State<Player> {
                           : '',
                       style: Theme.of(context).textTheme.headlineMedium,
                     ),
-                    // TODO: add progress bar
                     StreamBuilder<Object>(
-                        initialData: const Duration(seconds: 0),
-                        stream: _audioPlayer.positionStream,
-                        builder: (context, snapshot) {
-                          if (snapshot.hasError) {
-                            return const Text('Error');
-                          }
-                          if (!snapshot.hasData) {
-                            return const Text('Loading...');
-                          }
-                          Duration bufferedPosition = snapshot.data as Duration;
-                          return Padding(
-                            padding: const EdgeInsets.fromLTRB(18.0, 10, 18, 0),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Text(
-                                        '${bufferedPosition.inHours}:${bufferedPosition.inMinutes % 60}:${(bufferedPosition.inSeconds % 60).toString().padLeft(2, '0')}'),
-                                    _audioPlayer.duration != null
-                                        ? Text(
-                                            '${_audioPlayer.duration!.inHours}:${_audioPlayer.duration!.inMinutes % 60}:${(_audioPlayer.duration!.inSeconds % 60).toString().padLeft(2, '0')}')
-                                        : const SizedBox(),
-                                  ],
-                                ),
-                                LinearProgressIndicator(
-                                  value: bufferedPosition.inMilliseconds
-                                          .toDouble() /
-                                      _audioPlayer.duration!.inMilliseconds
-                                          .toDouble(),
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Theme.of(context).colorScheme.primary),
-                                  backgroundColor: Colors.grey,
-                                  borderRadius: const BorderRadius.all(
-                                      Radius.circular(18)),
-                                ),
-                              ],
-                            ),
+                      initialData: const Duration(seconds: 0),
+                      stream: _audioPlayer.positionStream,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return IconButton(
+                            onPressed: () => setState(() {}),
+                            icon: const Icon(Icons.refresh_rounded),
                           );
-                        }),
+                        }
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator(
+                            color: Colors.deepOrangeAccent,
+                            semanticsLabel: 'جاري التحميل...',
+                          );
+                        }
+                        Duration bufferedPosition = snapshot.data as Duration;
+                        return Padding(
+                          padding: const EdgeInsets.fromLTRB(18.0, 10, 18, 0),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                      '${bufferedPosition.inHours}:${bufferedPosition.inMinutes % 60}:${(bufferedPosition.inSeconds % 60).toString().padLeft(2, '0')}'),
+                                  _audioPlayer.duration != null
+                                      ? Text(
+                                          '${_audioPlayer.duration!.inHours}:${_audioPlayer.duration!.inMinutes % 60}:${(_audioPlayer.duration!.inSeconds % 60).toString().padLeft(2, '0')}')
+                                      : const Text('0:00:00'),
+                                ],
+                              ),
+                              _audioPlayer.duration != null
+                                  ? LinearProgressIndicator(
+                                      value: bufferedPosition.inMilliseconds
+                                              .toDouble() /
+                                          _audioPlayer.duration!.inMilliseconds
+                                              .toDouble(),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Theme.of(context)
+                                              .colorScheme
+                                              .primary),
+                                      backgroundColor: Colors.grey,
+                                      borderRadius: const BorderRadius.all(
+                                          Radius.circular(18)),
+                                    )
+                                  : const LinearProgressIndicator(
+                                      value: 0,
+                                      backgroundColor: Colors.grey,
+                                      borderRadius:
+                                          BorderRadius.all(Radius.circular(18)),
+                                    ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
                     PlayerButtons(_audioPlayer),
                     Expanded(child: Playlist(_audioPlayer, callback)),
                   ],

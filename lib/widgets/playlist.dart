@@ -22,6 +22,12 @@ class _PlaylistState extends State<Playlist> {
     return StreamBuilder<SequenceState?>(
       stream: widget._audioPlayer.sequenceStateStream,
       builder: (context, snapshot) {
+        if (snapshot.data == null) {
+          return const CircularProgressIndicator(
+                    color: Colors.deepOrangeAccent,
+                    semanticsLabel: 'جاري التحميل...',
+                  );
+        }
         final state = snapshot.data;
         final sequence = state?.sequence ?? [];
         return ListView(
